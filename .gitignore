@@ -25,3 +25,15 @@ coverage/
 
 # ACE data (local runtime data)
 sessions/
+
+# Documentation & project management (local only)
+docs/
+doc/
+.bmad/
+bmad/
+
+# Claude local settings
+.claude/settings.local.json
+
+# Temp files
+tmp-vitest.json
