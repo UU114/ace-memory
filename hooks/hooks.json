@@ -1,0 +1,30 @@
+{
+  "hooks": [
+    {
+      "event": "SessionStart",
+      "command": "node dist/hooks/session-start.js",
+      "timeout": 5000
+    },
+    {
+      "event": "UserPromptSubmit",
+      "command": "node dist/hooks/user-prompt-submit.js",
+      "timeout": 200
+    },
+    {
+      "event": "PostToolUse",
+      "command": "node dist/hooks/post-tool-use.js",
+      "matcher": "Edit|Write|Bash",
+      "timeout": 100
+    },
+    {
+      "event": "Stop",
+      "command": "node dist/hooks/stop.js",
+      "timeout": 10000
+    },
+    {
+      "event": "SessionEnd",
+      "command": "node dist/hooks/session-end.js",
+      "timeout": 30000
+    }
+  ]
+}
