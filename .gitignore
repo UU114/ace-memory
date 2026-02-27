@@ -34,6 +34,7 @@ bmad/
 
 # Claude local settings
 .claude/settings.local.json
+CLAUDE.md
 
 # Temp files
 tmp-vitest.json
