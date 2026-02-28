@@ -1,7 +1,7 @@
-# Demo 5: Manual Learning (`/learn`)
+# Demo 5: Manual Learning (`/ace-memory:learn`)
 
 ## Purpose
-Verify the `/learn` command for manual knowledge injection, including classification and deduplication.
+Verify the `/ace-memory:learn` command for manual knowledge injection, including classification and deduplication.
 
 ## Prerequisites
 - Demo 1 completed (daemon running)
@@ -11,7 +11,7 @@ Verify the `/learn` command for manual knowledge injection, including classifica
 
 ### Step 1: Learn a Preference
 ```
-/learn Always use bun instead of npm
+/ace-memory:learn Always use bun instead of npm
 ```
 
 **What to observe:**
@@ -29,7 +29,7 @@ Verify the `/learn` command for manual knowledge injection, including classifica
 
 ### Step 2: Learn a Pitfall
 ```
-/learn When you see ECONNRESET, retry with exponential backoff
+/ace-memory:learn When you see ECONNRESET, retry with exponential backoff
 ```
 
 **Expected classification:** `Pitfall` with `error_fix` tag.
@@ -37,7 +37,7 @@ Verify the `/learn` command for manual knowledge injection, including classifica
 ### Step 3: Test Deduplication
 Run the exact same learn command again:
 ```
-/learn Always use bun instead of npm
+/ace-memory:learn Always use bun instead of npm
 ```
 
 **What to observe:**
@@ -51,22 +51,22 @@ Run the exact same learn command again:
 
 ### Step 4: Verify Count
 ```
-/ace status
+/ace-memory:ace status
 ```
 
 **Expected:** Only 2 new bullets (not 3), because the duplicate was merged.
 
 ### Step 5: Search
 ```
-/ace search bun
+/ace-memory:ace search bun
 ```
 
 **Expected:** Returns the "Always use bun instead of npm" bullet.
 
 ## Success Criteria
-- [ ] `/learn` command injects knowledge into the pipeline
+- [ ] `/ace-memory:learn` command injects knowledge into the pipeline
 - [ ] Preference is classified correctly
 - [ ] Pitfall is classified correctly
-- [ ] Duplicate `/learn` triggers merge (not new insert)
-- [ ] `/ace status` reflects correct count
-- [ ] `/ace search` finds manually learned bullets
+- [ ] Duplicate `/ace-memory:learn` triggers merge (not new insert)
+- [ ] `/ace-memory:ace status` reflects correct count
+- [ ] `/ace-memory:ace search` finds manually learned bullets

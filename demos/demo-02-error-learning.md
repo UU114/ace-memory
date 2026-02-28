@@ -55,7 +55,7 @@ When Claude pauses between responses, the Stop hook fires:
 
 ### Step 5: Verify Storage
 ```
-/ace search error
+/ace-memory:ace search error
 ```
 
 **Expected:** At least one bullet containing the error message from Step 1.
@@ -66,4 +66,4 @@ When Claude pauses between responses, the Stop hook fires:
 - [ ] Stop hook triggers curate when threshold reached
 - [ ] Reflector distills entry into a Pitfall bullet
 - [ ] Curator inserts new bullet (no dedup on first occurrence)
-- [ ] `/ace search error` returns the stored bullet
+- [ ] `/ace-memory:ace search error` returns the stored bullet

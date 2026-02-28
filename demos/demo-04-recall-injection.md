@@ -52,7 +52,7 @@ What is the capital of France?
 
 ### Step 5: Verify Recall Count
 ```
-/ace search npm
+/ace-memory:ace search npm
 ```
 
 **Expected:** The matching bullet's `recall_count` should have incremented by 1.

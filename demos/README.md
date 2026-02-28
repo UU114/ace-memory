@@ -16,7 +16,7 @@ End-to-end demo scenarios for validating all core features of the ACE Memory plu
 | 2 | [demo-02-error-learning.md](demo-02-error-learning.md) | Auto-learn: Error Fix | ~5 min |
 | 3 | [demo-03-pattern-learning.md](demo-03-pattern-learning.md) | Auto-learn: Code Pattern & Command Usage | ~5 min |
 | 4 | [demo-04-recall-injection.md](demo-04-recall-injection.md) | Context Recall & Injection | ~3 min |
-| 5 | [demo-05-manual-learn.md](demo-05-manual-learn.md) | Manual Learning (`/learn`) | ~3 min |
+| 5 | [demo-05-manual-learn.md](demo-05-manual-learn.md) | Manual Learning (`/ace-memory:learn`) | ~3 min |
 | 6 | [demo-06-advanced.md](demo-06-advanced.md) | Export/Import, Decay | ~5 min |
 
 ## Recommended Order

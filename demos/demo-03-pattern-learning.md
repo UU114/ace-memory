@@ -65,8 +65,8 @@ End the session (close Claude Code or wait for SessionEnd hook).
 
 ### Step 6: Verify
 ```
-/ace search import
-/ace search build
+/ace-memory:ace search import
+/ace-memory:ace search build
 ```
 
 **Expected:** Bullets for each detected pattern type.
@@ -77,4 +77,4 @@ End the session (close Claude Code or wait for SessionEnd hook).
 - [ ] Bash tool triggers `command_usage` for npm/vitest commands
 - [ ] Trivial commands (ls, cd, cat) are NOT captured
 - [ ] SessionEnd curate processes all remaining entries
-- [ ] `/ace search` finds stored bullets
+- [ ] `/ace-memory:ace search` finds stored bullets

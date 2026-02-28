@@ -31,9 +31,9 @@ If a daemon already exists:
 [ACE] Reused existing daemon (session: sess-...)
 ```
 
-### Step 2: Run `/ace health`
+### Step 2: Run `/ace-memory:ace health`
 ```
-/ace health
+/ace-memory:ace health
 ```
 
 **Expected output:**
@@ -42,9 +42,9 @@ If a daemon already exists:
 - ONNX: loaded / not loaded
 - Active sessions count
 
-### Step 3: Run `/ace status`
+### Step 3: Run `/ace-memory:ace status`
 ```
-/ace status
+/ace-memory:ace status
 ```
 
 **Expected output:**
@@ -52,9 +52,9 @@ If a daemon already exists:
 - Breakdown by section (pitfalls, methods, techniques, preferences, knowledge)
 - Breakdown by scope (global, project:xxx)
 
-### Step 4: Run `/ace config`
+### Step 4: Run `/ace-memory:ace config`
 ```
-/ace config
+/ace-memory:ace config
 ```
 
 **Expected output:**
@@ -65,6 +65,6 @@ If a daemon already exists:
 ## Success Criteria
 - [ ] Daemon starts (or reuses) without errors
 - [ ] Session registered successfully
-- [ ] `/ace health` shows all green
-- [ ] `/ace status` returns valid statistics
-- [ ] `/ace config` shows default configuration
+- [ ] `/ace-memory:ace health` shows all green
+- [ ] `/ace-memory:ace status` returns valid statistics
+- [ ] `/ace-memory:ace config` shows default configuration

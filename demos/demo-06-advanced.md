@@ -11,7 +11,7 @@ Verify export, import, clear, and decay update functionality.
 
 ### Step 1: Export
 ```
-/ace export
+/ace-memory:ace export
 ```
 
 **Expected:**
@@ -21,7 +21,7 @@ Verify export, import, clear, and decay update functionality.
 
 ### Step 2: Clear Playbook
 ```
-/ace clear
+/ace-memory:ace clear
 ```
 
 **Expected:**
@@ -31,7 +31,7 @@ Verify export, import, clear, and decay update functionality.
 
 ### Step 3: Verify Empty
 ```
-/ace status
+/ace-memory:ace status
 ```
 
 **Expected:** 0 bullets in all sections.
@@ -39,7 +39,7 @@ Verify export, import, clear, and decay update functionality.
 ### Step 4: Import
 Import the JSON file from Step 1:
 ```
-/ace import <path-from-step-1>
+/ace-memory:ace import <path-from-step-1>
 ```
 
 **What to observe:**
@@ -54,7 +54,7 @@ Import the JSON file from Step 1:
 
 ### Step 5: Verify Recovery
 ```
-/ace status
+/ace-memory:ace status
 ```
 
 **Expected:** Bullet count matches the exported count from Step 1.
@@ -62,7 +62,7 @@ Import the JSON file from Step 1:
 ### Step 6: (Optional) Trigger Decay Update
 If you have access to the daemon IPC or a test command:
 ```
-/ace decay
+/ace-memory:ace decay
 ```
 
 **What to observe:**
