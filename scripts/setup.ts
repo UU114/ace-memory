@@ -5,18 +5,25 @@ import { getModelsDir } from '../shared/platform.js';
 
 const MODEL_NAME = 'all-MiniLM-L6-v2';
 
-// HuggingFace raw file URLs for the ONNX model
+// Download sources in priority order: HuggingFace → hf-mirror → ModelScope
+const SOURCES = [
+  {
+    name: 'HuggingFace',
+    baseUrl: 'https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main',
+  },
+  {
+    name: 'hf-mirror',
+    baseUrl: 'https://hf-mirror.com/sentence-transformers/all-MiniLM-L6-v2/resolve/main',
+  },
+  {
+    name: 'ModelScope',
+    baseUrl: 'https://modelscope.cn/models/sentence-transformers/all-MiniLM-L6-v2/resolve/master',
+  },
+];
+
 const MODEL_FILES = [
-  {
-    name: 'model.onnx',
-    url: 'https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/onnx/model.onnx',
-    description: 'ONNX model weights',
-  },
-  {
-    name: 'tokenizer.json',
-    url: 'https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer.json',
-    description: 'Tokenizer vocabulary',
-  },
+  { name: 'model.onnx', path: 'onnx/model.onnx', description: 'ONNX model weights' },
+  { name: 'tokenizer.json', path: 'tokenizer.json', description: 'Tokenizer vocabulary' },
 ];
 
 function formatBytes(bytes: number): string {
@@ -25,7 +32,9 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Download a file with progress reporting, following redirects
+const DOWNLOAD_TIMEOUT_MS = 30000;
+
+// Download a file with progress reporting, following redirects and timeout
 function downloadFile(url: string, dest: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const doRequest = (currentUrl: string, redirectCount: number) => {
@@ -34,7 +43,7 @@ function downloadFile(url: string, dest: string): Promise<void> {
         return;
       }
 
-      https.get(currentUrl, (res) => {
+      const req = https.get(currentUrl, (res) => {
         // Follow redirects
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           doRequest(res.headers.location, redirectCount + 1);
@@ -42,9 +51,11 @@ function downloadFile(url: string, dest: string): Promise<void> {
         }
 
         if (res.statusCode !== 200) {
-          reject(new Error(`HTTP ${res.statusCode} for ${currentUrl}`));
+          reject(new Error(`HTTP ${res.statusCode}`));
           return;
         }
+
+        clearTimeout(timeout);
 
         const totalSize = parseInt(res.headers['content-length'] ?? '0', 10);
         let downloaded = 0;
@@ -71,14 +82,45 @@ function downloadFile(url: string, dest: string): Promise<void> {
           resolve();
         });
         file.on('error', (err) => {
-          fs.unlinkSync(dest);
+          try { fs.unlinkSync(dest); } catch { /* ignore */ }
           reject(err);
         });
-      }).on('error', reject);
+      });
+
+      req.on('error', (err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+
+      const timeout = setTimeout(() => {
+        req.destroy();
+        reject(new Error('Connection timeout'));
+      }, DOWNLOAD_TIMEOUT_MS);
     };
 
     doRequest(url, 0);
   });
+}
+
+// Try downloading a file from multiple sources, fallback on failure
+async function downloadWithFallback(filePath: string, dest: string, description: string): Promise<string> {
+  for (let i = 0; i < SOURCES.length; i++) {
+    const source = SOURCES[i];
+    const url = `${source.baseUrl}/${filePath}`;
+    try {
+      process.stderr.write(`[ACE] [${source.name}] Downloading ${description}...\n`);
+      await downloadFile(url, dest);
+      return source.name;
+    } catch (err: any) {
+      try { fs.unlinkSync(dest); } catch { /* ignore */ }
+      if (i < SOURCES.length - 1) {
+        process.stderr.write(`[ACE] [${source.name}] Failed: ${err.message}, trying next mirror...\n`);
+      } else {
+        throw new Error(`All sources failed for ${description}. Last error: ${err.message}`);
+      }
+    }
+  }
+  throw new Error('Unreachable');
 }
 
 export async function setup(): Promise<void> {
@@ -100,16 +142,16 @@ export async function setup(): Promise<void> {
 
   console.error(`[ACE] Setting up ONNX embedding model: ${MODEL_NAME}`);
   console.error(`[ACE] Target directory: ${modelDir}`);
+  console.error(`[ACE] Sources: ${SOURCES.map(s => s.name).join(' → ')}`);
   console.error('');
 
   for (const file of MODEL_FILES) {
     const destPath = path.join(modelDir, file.name);
-    console.error(`[ACE] Downloading ${file.description} (${file.name})...`);
 
     try {
-      await downloadFile(file.url, destPath);
+      await downloadWithFallback(file.path, destPath, `${file.description} (${file.name})`);
     } catch (err: any) {
-      console.error(`\n[ACE] ERROR: Failed to download ${file.name}: ${err.message}`);
+      console.error(`\n[ACE] ERROR: ${err.message}`);
       // Cleanup partial downloads
       try { fs.unlinkSync(destPath); } catch { /* ignore */ }
       throw err;
