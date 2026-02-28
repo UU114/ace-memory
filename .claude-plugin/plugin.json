@@ -2,9 +2,5 @@
   "name": "ace-memory",
   "version": "0.1.0",
   "description": "ACE - Adaptive Context Engine. Self-adaptive memory for Claude Code.",
-  "hooks": "../hooks/hooks.json",
-  "skills": [
-    "../skills/ace.md",
-    "../skills/learn.md"
-  ]
+  "hooks": "../hooks/hooks.json"
 }
