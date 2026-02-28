@@ -52,9 +52,15 @@ npm install
 # 3. Build
 npx tsup
 
-# 4. (Optional) Download ONNX model for semantic search
+# 4. Download ONNX model (IMPORTANT)
 node dist/scripts/setup.js
+# Or use the slash command after plugin is registered:
+#   /ace-memory:ace setup
 ```
+
+> **Important**: Please run `setup` to download the ONNX embedding model. Without it, ACE can only use keyword search. After downloading the model, semantic (hybrid) search will be enabled, significantly improving knowledge retrieval accuracy.
+
+
 
 ### Register as Claude Code Plugin
 
@@ -85,6 +91,7 @@ ACE provides two slash commands in Claude Code (namespaced under the plugin name
 | `/ace-memory:ace config` | Display current configuration |
 | `/ace-memory:ace config set <key> <value>` | Update config (dot notation, e.g. `decay.half_life_days 60`) |
 | `/ace-memory:ace health` | Check daemon, IPC, and ONNX model status |
+| `/ace-memory:ace setup` | Download ONNX embedding model for semantic search (run once) |
 | `/ace-memory:ace export` | Export entire Playbook as JSON |
 | `/ace-memory:ace clear` | Delete all bullets (requires confirmation) |
 
@@ -94,6 +101,7 @@ Examples:
 /ace-memory:ace search vitest setup
 /ace-memory:ace config set search.max_results 10
 /ace-memory:ace health
+/ace-memory:ace setup
 ```
 
 #### `/ace-memory:learn` — Manual Knowledge Ingestion
