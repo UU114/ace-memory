@@ -64,14 +64,39 @@ node dist/scripts/setup.js
 
 ### Register as Claude Code Plugin
 
-Copy or symlink the plugin to your Claude Code plugins directory:
+**Method 1: Local Marketplace (Recommended)**
 
 ```bash
-# The plugin entry point is .claude-plugin/plugin.json
-# Register it according to Claude Code's plugin system
+# Add the plugin directory as a local marketplace
+/plugin marketplace add /path/to/ace-memory
+
+# Install the plugin
+/plugin install ace-memory@ace-memory
 ```
 
-When a new Claude Code session starts, the plugin will:
+**Method 2: Interactive UI**
+
+```bash
+# Open the plugin manager
+/plugin
+# Navigate to "Discover" tab, find ace-memory and install
+```
+
+**Method 3: Per-session (Temporary)**
+
+```bash
+claude --plugin-dir /path/to/ace-memory
+```
+
+Installation scope options (default is `user`):
+
+| Scope | Description |
+|-------|-------------|
+| `user` | Available across all projects (`~/.claude/settings.json`) |
+| `project` | Team-shared, checked into version control (`.claude/settings.json`) |
+| `local` | Project-specific, gitignored (`.claude/settings.local.json`) |
+
+After installation, start a new Claude Code session. The plugin will:
 1. Auto-start the ACE daemon (background process)
 2. Load and inject relevant knowledge into context
 3. Begin monitoring for learnable patterns
