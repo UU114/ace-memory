@@ -8,6 +8,7 @@ import { Importer } from '../engine/importer.js';
 import { Curator } from '../engine/curator.js';
 import { setup } from './setup.js';
 import fs from 'fs';
+import path from 'path';
 
 // Output JSON result to stdout
 function output(data: unknown): void {
@@ -216,7 +217,7 @@ export async function exportCmd(args: string[] = []): Promise<void> {
     const result = exporter.export({
       format: format === 'raw' ? 'json' : format,
       scope,
-      projectName: config.project_name,
+      projectName: path.basename(process.cwd()),
     });
 
     if (outputPath) {

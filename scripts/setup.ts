@@ -44,9 +44,10 @@ function downloadFile(url: string, dest: string): Promise<void> {
       }
 
       const req = https.get(currentUrl, (res) => {
-        // Follow redirects
+        // Follow redirects (resolve relative URLs against the current URL)
         if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          doRequest(res.headers.location, redirectCount + 1);
+          const redirectUrl = new URL(res.headers.location, currentUrl).href;
+          doRequest(redirectUrl, redirectCount + 1);
           return;
         }
 
