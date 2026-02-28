@@ -12,6 +12,7 @@ Manage your ACE (Adaptive Context Engine) knowledge Playbook. View stats, search
 - `/ace config` — Show the current ACE configuration
 - `/ace config set <key> <value>` — Update a config value using dot notation (e.g., `decay.half_life_days 60`)
 - `/ace health` — Check daemon health, IPC connectivity, and ONNX model availability
+- `/ace setup` — Download the ONNX embedding model for semantic search (required once before using hybrid search)
 - `/ace export` — Export the entire Playbook as a JSON array of bullets
 - `/ace clear` — Clear all bullets from the Playbook (destructive, confirm with the user first)
 
@@ -44,6 +45,11 @@ Confirm the change to the user.
 ### health
 Returns JSON with fields: `daemon` (running/stopped), `ipc` (connected/unreachable), `onnx` (available/missing), `pidFile` (boolean).
 Present as a health checklist.
+
+### setup
+Downloads the ONNX embedding model (`all-MiniLM-L6-v2`) from HuggingFace for semantic search. Only needs to run once. Progress is printed to stderr. On completion returns `{ "success": true }`.
+If the model already exists, it will report that and skip the download.
+Present the download progress and result to the user.
 
 ### export
 Returns the full Playbook as a JSON array. This can be large.

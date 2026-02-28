@@ -6,6 +6,7 @@ import { Generator } from '../engine/generator.js';
 import { Exporter, type ExportFormat } from '../engine/exporter.js';
 import { Importer } from '../engine/importer.js';
 import { Curator } from '../engine/curator.js';
+import { setup } from './setup.js';
 import fs from 'fs';
 
 // Output JSON result to stdout
@@ -346,6 +347,12 @@ export async function promoteCmd(args: string[]): Promise<void> {
   }
 }
 
+// Download ONNX model for semantic search
+export async function setupCmd(): Promise<void> {
+  await setup();
+  output({ success: true, message: 'ONNX model setup complete' });
+}
+
 // Clear all bullets from the Playbook
 export async function clearCmd(): Promise<void> {
   const db = new AceDatabase(getDbPath());
@@ -387,6 +394,8 @@ async function main(): Promise<void> {
       return projectsCmd(args.slice(1));
     case 'promote':
       return promoteCmd(args.slice(1));
+    case 'setup':
+      return setupCmd();
     case 'clear':
       return clearCmd();
     default:
