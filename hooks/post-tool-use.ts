@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { RulesEngine } from '../engine/rules-engine.js';
 import { appendToQueue } from '../storage/session-queue.js';
-import { aceError } from '../shared/logger.js';
+import { aceError, aceDebug } from '../shared/logger.js';
 import type { PostToolUseInput, SessionQueueEntry } from '../types/hook.js';
 
 function readStdinSync(): string {
@@ -28,12 +28,16 @@ function main(): void {
   }
 
   const engine = new RulesEngine();
+  aceDebug(`PostToolUse: tool=${tool_name}, session=${session_id}`);
   const candidate = engine.detect(tool_name, tool_input, tool_response);
 
   if (!candidate) {
+    aceDebug(`PostToolUse: no pattern detected for ${tool_name}`);
     process.stdout.write('{}');
     return;
   }
+
+  aceDebug(`PostToolUse: detected pattern_type=${candidate.pattern_type}, summary=${candidate.summary.slice(0, 80)}`);
 
   const entry: SessionQueueEntry = {
     timestamp: new Date().toISOString(),
@@ -46,6 +50,7 @@ function main(): void {
 
   try {
     appendToQueue(session_id, entry);
+    aceDebug(`PostToolUse: appended to session queue (session=${session_id})`);
   } catch (err) {
     aceError(`Failed to write session queue: ${err}`);
   }

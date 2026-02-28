@@ -3,7 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { IPCClient } from '../shared/ipc-client.js';
 import { getPidPath, getSocketPath, getMetaPath } from '../shared/platform.js';
-import { aceLog, aceWarn, aceError } from '../shared/logger.js';
+import { aceLog, aceWarn, aceError, aceDebug } from '../shared/logger.js';
 import type { PingResult } from '../types/ipc.js';
 
 export const ENGINE_VERSION = '0.1.0';
@@ -110,8 +110,10 @@ export async function sessionStartMain(): Promise<void> {
 
   try {
     // Step 1: Check existing daemon via PID file
+    aceDebug(`SessionStart: checking existing daemon...`);
     const existingPid = readPidFile();
     if (existingPid !== null && isProcessAlive(existingPid)) {
+      aceDebug(`SessionStart: found alive daemon pid=${existingPid}, attempting IPC ping`);
       const client = await IPCClient.connect(500);
       if (client) {
         try {
@@ -120,11 +122,13 @@ export async function sessionStartMain(): Promise<void> {
             // Reuse existing daemon
             await client.call('session_register', { session_id: sessionId, pid: process.ppid }, 1000);
             client.disconnect();
+            aceDebug(`SessionStart: reusing existing daemon (version=${pong.version})`);
             aceLog(`Reused existing daemon (session: ${sessionId})`);
             process.stdout.write('{}');
             return;
           }
           // Version mismatch - shutdown old daemon
+          aceDebug(`SessionStart: version mismatch (running=${pong.version}, expected=${ENGINE_VERSION})`);
           aceLog(`Version mismatch (${pong.version} != ${ENGINE_VERSION}), restarting daemon`);
           await client.call('shutdown', {}, 1000);
           client.disconnect();
@@ -133,17 +137,23 @@ export async function sessionStartMain(): Promise<void> {
           client.disconnect();
         }
       }
+    } else {
+      aceDebug(`SessionStart: no running daemon found (pid=${existingPid})`);
     }
 
     // Step 2: Cleanup stale files
+    aceDebug(`SessionStart: cleaning up stale files`);
     cleanupStaleFiles();
 
     // Step 3: Spawn new daemon
+    aceDebug(`SessionStart: spawning new daemon process`);
     spawnDaemon();
 
     // Step 4: Wait for daemon to become ready
+    aceDebug(`SessionStart: polling daemon readiness (timeout=5000ms)`);
     const ready = await pollDaemonReady(5000, 200);
     if (ready) {
+      aceDebug(`SessionStart: daemon is ready, registering session`);
       const client = await IPCClient.connect(500);
       if (client) {
         await client.call('session_register', { session_id: sessionId, pid: process.ppid }, 1000);
@@ -151,6 +161,7 @@ export async function sessionStartMain(): Promise<void> {
         aceLog(`Daemon started and session registered (session: ${sessionId})`);
       }
     } else {
+      aceDebug(`SessionStart: daemon failed to respond within timeout`);
       aceWarn('Daemon failed to start, running in degraded mode');
     }
   } catch (err) {

@@ -4,7 +4,7 @@ import type { ConflictDetector } from './conflict-detector.js';
 import type { DistilledBullet } from './reflector.js';
 import type { Bullet } from '../types/bullet.js';
 import { cosineSimilarity } from './embedding.js';
-import { aceLog } from '../shared/logger.js';
+import { aceLog, aceDebug } from '../shared/logger.js';
 import { randomUUID } from 'crypto';
 
 // Union two string arrays, deduplicating
@@ -25,8 +25,11 @@ export class Curator {
   }
 
   async curate(bullet: DistilledBullet): Promise<'added' | 'merged' | 'skipped'> {
+    aceDebug(`Curator.curate: content="${bullet.content.slice(0, 60)}", type=${bullet.knowledge_type}, scope=${bullet.scope}`);
+
     // Skip empty content
     if (!bullet.content || bullet.content.trim().length === 0) {
+      aceDebug(`Curator: skipped (empty content)`);
       return 'skipped';
     }
 
@@ -35,11 +38,14 @@ export class Curator {
       const similar = this.vectorCache.searchSimilar(bullet.embedding, 1);
       if (similar.length > 0 && similar[0].score >= this.dedupThreshold) {
         const existingId = similar[0].id;
+        aceDebug(`Curator: semantic match found id=${existingId}, score=${similar[0].score.toFixed(3)} (threshold=${this.dedupThreshold})`);
         const existing = this.db.getBulletById(existingId);
         if (existing) {
           this.mergeBullet(existing, bullet);
           return 'merged';
         }
+      } else {
+        aceDebug(`Curator: no semantic match (best=${similar.length > 0 ? similar[0].score.toFixed(3) : 'none'})`);
       }
     }
 
@@ -48,12 +54,15 @@ export class Curator {
       const allBullets = this.db.queryBullets({});
       const exactMatch = allBullets.find(b => b.content === bullet.content);
       if (exactMatch) {
+        aceDebug(`Curator: exact match found id=${exactMatch.id}`);
         this.mergeBullet(exactMatch, bullet);
         return 'merged';
       }
+      aceDebug(`Curator: no exact match among ${allBullets.length} existing bullets`);
     }
 
     // Path 3: Insert new bullet
+    aceDebug(`Curator: inserting new bullet`);
     const insertedId = this.insertBullet(bullet);
 
     // Async conflict detection (non-blocking, fire-and-forget)

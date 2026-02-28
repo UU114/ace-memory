@@ -207,22 +207,29 @@ describe('ace-cli', () => {
   });
 
   describe('exportCmd', () => {
-    it('returns empty array for empty database (backward compat)', async () => {
+    it('returns ExportData format for empty database', async () => {
       await exportCmd();
-      const result = getOutput() as unknown[];
-      expect(result).toEqual([]);
+      // Default export now uses Exporter, output via console.log
+      const rawOutput = consoleSpy.mock.calls[0]?.[0] as string;
+      const result = JSON.parse(rawOutput);
+      expect(result.export_version).toBe(1);
+      expect(result.bullet_count).toBe(0);
+      expect(result.bullets).toEqual([]);
     });
 
-    it('returns all bullets as raw array with no args (backward compat)', async () => {
+    it('returns ExportData with all bullets (no args)', async () => {
       const db = new AceDatabase(dbPath);
       db.insertBullet(makeBullet({ id: 'e1' }));
       db.insertBullet(makeBullet({ id: 'e2' }));
       db.close();
 
       await exportCmd();
-      const result = getOutput() as Array<{ id: string }>;
-      expect(result).toHaveLength(2);
-      const ids = result.map(b => b.id).sort();
+      const rawOutput = consoleSpy.mock.calls[0]?.[0] as string;
+      const result = JSON.parse(rawOutput);
+      expect(result.export_version).toBe(1);
+      expect(result.bullet_count).toBe(2);
+      expect(result.bullets).toHaveLength(2);
+      const ids = result.bullets.map((b: { id: string }) => b.id).sort();
       expect(ids).toEqual(['e1', 'e2']);
     });
 

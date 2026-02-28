@@ -12,7 +12,7 @@ import { Curator } from '../engine/curator.js';
 import { Sanitizer } from '../engine/sanitizer.js';
 import { Classifier } from '../engine/classifier.js';
 import { ConflictDetector } from '../engine/conflict-detector.js';
-import { aceLog, aceWarn } from '../shared/logger.js';
+import { aceLog, aceWarn, aceDebug } from '../shared/logger.js';
 
 const VERSION = '0.1.0';
 
@@ -30,6 +30,7 @@ export class IPCHandler {
 
   // Dispatch a method call and return the result
   async handle(method: string, params: Record<string, unknown>): Promise<unknown> {
+    aceDebug(`IPCHandler: method=${method}, params_keys=${Object.keys(params).join(',')}`);
     switch (method) {
       case 'ping':
         return {
@@ -105,6 +106,8 @@ export class IPCHandler {
     const insights = params.insights as SessionQueueEntry[];
     const projectName = (params.project as string) || 'unknown';
 
+    aceDebug(`IPCHandler.curate: ${insights.length} insights for project=${projectName}`);
+
     const reflector = new Reflector(
       new Sanitizer(),
       new Classifier(DEFAULT_CONFIG.reflector.min_interaction_quality * 100),
@@ -114,6 +117,7 @@ export class IPCHandler {
     const curator = new Curator(this.db, this.vectorCache);
 
     const { bullets, skipped } = await reflector.distill(insights, projectName);
+    aceDebug(`IPCHandler.curate: reflector produced ${bullets.length} bullets, skipped ${skipped}`);
 
     let added = 0, merged = 0;
     let curatorSkipped = 0;
@@ -124,6 +128,7 @@ export class IPCHandler {
       else curatorSkipped++;
     }
 
+    aceDebug(`IPCHandler.curate: result — added=${added}, merged=${merged}, skipped=${skipped + curatorSkipped}`);
     return { added, merged, skipped: skipped + curatorSkipped };
   }
 
@@ -152,6 +157,8 @@ export class IPCHandler {
     const project = params.project as string;
     const limit = (params.limit as number) ?? this.searchConfig.max_results;
 
+    aceDebug(`IPCHandler.recall: query="${query?.slice(0, 60)}", project=${project}, limit=${limit}`);
+
     if (!query?.trim()) {
       return { bullets: [] };
     }
@@ -162,6 +169,8 @@ export class IPCHandler {
       scopes,
       minDecayWeight: 0.02, // archive_threshold
     });
+
+    aceDebug(`IPCHandler.recall: ${bullets.length} candidate bullets in scope [${scopes.join(', ')}]`);
 
     if (bullets.length === 0) {
       return { bullets: [] };
@@ -208,6 +217,7 @@ export class IPCHandler {
       }
     }
 
+    aceDebug(`IPCHandler.recall: returning ${results.length} results`);
     return { bullets: results.map(r => r.bullet) };
   }
 }

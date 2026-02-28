@@ -16,6 +16,7 @@ vi.mock('../../shared/ipc-client.js', () => ({
 vi.mock('../../shared/logger.js', () => ({
   aceLog: vi.fn(),
   aceWarn: vi.fn(),
+  aceDebug: vi.fn(),
 }));
 
 import { stopMain } from '../../hooks/stop.js';

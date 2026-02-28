@@ -49,6 +49,23 @@ export function chineseNGrams(text: string, n: number): string[] {
   return grams;
 }
 
+// Common English stop words to skip during keyword scoring
+const STOP_WORDS = new Set([
+  'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+  'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+  'should', 'may', 'might', 'shall', 'can', 'need', 'dare', 'ought',
+  'used', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from',
+  'as', 'into', 'through', 'during', 'before', 'after', 'above', 'below',
+  'between', 'out', 'off', 'over', 'under', 'again', 'further', 'then',
+  'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'each',
+  'every', 'both', 'few', 'more', 'most', 'other', 'some', 'such', 'no',
+  'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very',
+  'just', 'because', 'but', 'and', 'or', 'if', 'while', 'about', 'up',
+  'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those',
+  'am', 'it', 'its', 'my', 'me', 'we', 'our', 'you', 'your', 'he',
+  'him', 'his', 'she', 'her', 'they', 'them', 'their', 'i',
+]);
+
 // Tokenize query: split on whitespace and punctuation, lowercase
 export function tokenize(text: string): string[] {
   const tokens = text
@@ -57,6 +74,11 @@ export function tokenize(text: string): string[] {
     .split(/\s+/)
     .filter(t => t.length > 0);
   return tokens;
+}
+
+// Tokenize for search: removes stop words for better precision
+export function tokenizeForSearch(text: string): string[] {
+  return tokenize(text).filter(t => !STOP_WORDS.has(t));
 }
 
 // Parse prefix syntax like "tool:git", "tag:react", "lang:typescript"
@@ -174,7 +196,7 @@ export class Generator {
   keywordSearch(query: string, bullets: Bullet[], limit = 10, minScore = 0): SearchResult[] {
     if (!query.trim() || bullets.length === 0) return [];
 
-    const tokens = tokenize(query);
+    const tokens = tokenizeForSearch(query);
     const { prefixTools, prefixTags, prefixEntities, remainingTokens } = extractPrefixFilters(tokens);
     const allSearchTokens = remainingTokens;
     const stemmed = allSearchTokens.map(stem);
@@ -224,7 +246,7 @@ export class Generator {
     // If no query vector or very short query (1-2 chars), fall back to keyword-only
     const isSemanticAvailable = queryVec !== null && query.trim().length > 2 && vectorCache.size > 0;
 
-    const tokens = tokenize(query);
+    const tokens = tokenizeForSearch(query);
     const { prefixTools, prefixTags, prefixEntities, remainingTokens } = extractPrefixFilters(tokens);
     const allSearchTokens = remainingTokens;
     const stemmed = allSearchTokens.map(stem);

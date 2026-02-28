@@ -1,5 +1,11 @@
 {
   "name": "ace-memory",
   "version": "0.1.0",
-  "description": "ACE - Adaptive Context Engine. Self-adaptive memory for Claude Code."
+  "description": "ACE - Adaptive Context Engine. Self-adaptive memory for Claude Code. Automatically captures, distills, and retrieves knowledge across sessions.",
+  "author": {
+    "name": "UU114"
+  },
+  "homepage": "https://github.com/UU114/ace-memory",
+  "repository": "https://github.com/UU114/ace-memory",
+  "license": "MIT"
 }

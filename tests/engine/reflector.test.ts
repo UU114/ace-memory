@@ -55,8 +55,8 @@ describe('Reflector', () => {
       const { bullets } = await reflector.distill([entry], 'test-project');
 
       expect(bullets.length).toBe(1);
-      expect(bullets[0].content).toContain('When encountering TypeError');
-      expect(bullets[0].content).toContain('fix by add null check');
+      expect(bullets[0].content).toContain('encountering');
+      expect(bullets[0].content).toContain('add null check');
     });
 
     it('distills code_pattern entries correctly', async () => {
@@ -72,7 +72,8 @@ describe('Reflector', () => {
       const { bullets } = await reflector.distill([entry], 'test-project');
 
       expect(bullets.length).toBe(1);
-      expect(bullets[0].content).toContain('When typescript, use');
+      expect(bullets[0].content).toContain('typescript');
+      expect(bullets[0].content).toContain('Apply and use this correctly');
     });
 
     it('distills command_usage entries correctly', async () => {
@@ -88,8 +89,8 @@ describe('Reflector', () => {
       const { bullets } = await reflector.distill([entry], 'test-project');
 
       expect(bullets.length).toBe(1);
-      expect(bullets[0].content).toContain('Use `npx vitest run --reporter verbose`');
-      expect(bullets[0].content).toContain('for running the test suite');
+      expect(bullets[0].content).toContain('`npx vitest run --reporter verbose`');
+      expect(bullets[0].content).toContain('running the test suite');
     });
 
     it('distills file_creation entries correctly', async () => {
@@ -105,7 +106,8 @@ describe('Reflector', () => {
       const { bullets } = await reflector.distill([entry], 'test-project');
 
       expect(bullets.length).toBe(1);
-      expect(bullets[0].content).toContain('Create tsconfig.json with');
+      expect(bullets[0].content).toContain('tsconfig.json');
+      expect(bullets[0].content).toContain('Apply this approach');
     });
 
     it('uses fallback for unknown pattern types', async () => {

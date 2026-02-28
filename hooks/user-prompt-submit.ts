@@ -3,7 +3,7 @@ import path from 'path';
 import { IPCClient } from '../shared/ipc-client.js';
 import { getDbPath } from '../shared/platform.js';
 import { loadConfig } from '../shared/config-loader.js';
-import { aceWarn, aceError } from '../shared/logger.js';
+import { aceWarn, aceError, aceDebug } from '../shared/logger.js';
 import { AceDatabase } from '../storage/sqlite.js';
 import { Generator } from '../engine/generator.js';
 import { formatAceMemory } from '../shared/ace-memory-format.js';
@@ -120,8 +120,11 @@ async function main() {
   const scopes = [`project:${projectName}`, 'global'];
   const config = loadConfig();
 
+  aceDebug(`UserPromptSubmit: query="${prompt.slice(0, 80)}", project=${projectName}`);
+
   try {
     // Try Daemon first
+    aceDebug(`UserPromptSubmit: attempting recall via daemon...`);
     let bullets = await recallViaDaemon(
       prompt,
       projectName,
@@ -130,17 +133,23 @@ async function main() {
 
     // Fallback to direct SQLite
     if (bullets === null) {
+      aceDebug(`UserPromptSubmit: daemon unavailable, falling back to direct SQLite`);
       bullets = recallFallback(prompt, scopes, config);
     }
+
+    aceDebug(`UserPromptSubmit: recall returned ${bullets?.length ?? 0} bullets`);
 
     if (bullets && bullets.length > 0) {
       const context = formatAceMemory(
         bullets,
         config.search.max_context_tokens,
       );
+      aceDebug(`UserPromptSubmit: injecting ${bullets.length} bullets as <ace-memory> (${context.length} chars)`);
       write(buildOutput(context));
       return;
     }
+
+    aceDebug(`UserPromptSubmit: no relevant bullets found, skipping injection`);
   } catch (err) {
     aceError(`UserPromptSubmit error: ${err}`);
   }

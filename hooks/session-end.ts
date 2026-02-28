@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { readQueue, cleanupQueue } from '../storage/session-queue.js';
 import { IPCClient } from '../shared/ipc-client.js';
-import { aceLog, aceWarn } from '../shared/logger.js';
+import { aceLog, aceWarn, aceDebug } from '../shared/logger.js';
 import type { SessionEndInput } from '../types/hook.js';
 
 const IPC_CONNECT_TIMEOUT = 500;
@@ -22,6 +22,8 @@ export async function sessionEndMain(input: SessionEndInput): Promise<void> {
   const entries = readQueue(session_id);
   const unprocessed = entries.filter(e => !e.processed);
 
+  aceDebug(`SessionEnd: session=${session_id}, total_entries=${entries.length}, unprocessed=${unprocessed.length}`);
+
   const client = await IPCClient.connect(IPC_CONNECT_TIMEOUT);
   let stats = { added: 0, merged: 0, skipped: 0 };
 
@@ -30,9 +32,11 @@ export async function sessionEndMain(input: SessionEndInput): Promise<void> {
       // Process remaining candidates in batches
       if (unprocessed.length > 0) {
         const projectName = path.basename(cwd || '');
+        aceDebug(`SessionEnd: curating ${unprocessed.length} entries for project=${projectName}`);
 
         for (let i = 0; i < unprocessed.length; i += BATCH_SIZE) {
           const batch = unprocessed.slice(i, i + BATCH_SIZE);
+          aceDebug(`SessionEnd: processing batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} entries)`);
           try {
             const result = await client.call<{ added: number; merged: number; skipped: number }>(
               'curate',
@@ -42,6 +46,7 @@ export async function sessionEndMain(input: SessionEndInput): Promise<void> {
             stats.added += result.added;
             stats.merged += result.merged;
             stats.skipped += result.skipped;
+            aceDebug(`SessionEnd: batch result — added=${result.added}, merged=${result.merged}, skipped=${result.skipped}`);
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
             aceWarn(`SessionEnd curate batch failed: ${message}`);

@@ -206,13 +206,6 @@ export async function exportCmd(args: string[] = []): Promise<void> {
 
   const db = new AceDatabase(getDbPath());
   try {
-    // Backward compat: no args = raw JSON array (original behavior)
-    if (format === 'raw' && !scope && !outputPath) {
-      const bullets = db.queryBullets({});
-      output(bullets);
-      return;
-    }
-
     const exporter = new Exporter(db);
     const result = exporter.export({
       format: format === 'raw' ? 'json' : format,

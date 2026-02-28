@@ -5,7 +5,7 @@ import type { LLMEvaluator } from './llm-evaluator.js';
 import type { OnnxEmbedding } from './embedding.js';
 import type { SessionQueueEntry } from '../types/hook.js';
 import type { BulletSection, BulletScope, KnowledgeType } from '../types/bullet.js';
-import { aceLog, aceWarn } from '../shared/logger.js';
+import { aceLog, aceWarn, aceDebug } from '../shared/logger.js';
 
 const MAX_CONTENT_LENGTH = 500;
 const MAX_CODE_LINES = 3;
@@ -65,20 +65,29 @@ function inferScope(entry: SessionQueueEntry, projectName: string): BulletScope 
 
 // Generate concise content from a SessionQueueEntry
 function distillContent(entry: SessionQueueEntry): string {
+  // Manual entries (from /learn) already have polished summary content
+  if (entry.tool_name === 'manual') {
+    return entry.summary.length > MAX_CONTENT_LENGTH
+      ? entry.summary.slice(0, MAX_CONTENT_LENGTH)
+      : entry.summary;
+  }
+
   let content: string;
 
   switch (entry.pattern_type) {
-    case 'error_fix':
-      content = `When encountering ${entry.context.error_message || 'an error'}, fix by ${entry.summary}`;
+    case 'error_fix': {
+      const errMsg = entry.context.error_message || 'an error';
+      content = `When encountering "${errMsg}", always apply this fix: ${entry.summary}. Ensure you use the correct approach to avoid re-running into the same error.`;
       break;
+    }
     case 'code_pattern':
-      content = `When ${entry.context.language || 'coding'}, use ${entry.summary}`;
+      content = `In ${entry.context.language || 'coding'}: ${entry.summary}. Apply and use this correctly to ensure good results.`;
       break;
     case 'command_usage':
-      content = `Use \`${entry.context.command || entry.tool_name}\` for ${entry.summary}`;
+      content = `Always run \`${entry.context.command || entry.tool_name}\` to ${entry.summary.replace(/^Executed:\s*/, '')}. Use this command when you need to execute this operation.`;
       break;
     case 'file_creation':
-      content = `Create ${entry.context.file || 'file'} with ${entry.summary}`;
+      content = `Always create ${entry.context.file || 'file'} using this approach: ${entry.summary}. Apply this approach consistently.`;
       break;
     default:
       content = entry.summary;
@@ -192,19 +201,24 @@ export class Reflector {
     const bullets: DistilledBullet[] = [];
     let skipped = 0;
 
+    aceDebug(`Reflector.distill: processing ${entries.length} entries for project=${projectName}`);
+
     for (const entry of entries) {
       // Step 1: Generate content from entry
       const content = distillContent(entry);
+      aceDebug(`Reflector: [${entry.pattern_type}] raw content="${content.slice(0, 80)}"`);
 
       // Step 2: Sanitize
       const sanitizeResult = this.sanitizer.sanitize(content);
       if (!sanitizeResult.clean) {
+        aceDebug(`Reflector: sanitizer rejected — ${sanitizeResult.reasons.join(', ')}`);
         aceWarn(`Reflector: skipping entry (sanitizer rejected) - ${sanitizeResult.reasons.join(', ')}`);
         skipped++;
         continue;
       }
 
       const cleanContent = sanitizeResult.content;
+      aceDebug(`Reflector: sanitized ok, length=${cleanContent.length}`);
 
       // Step 3: Classify
       let classifyResult = this.classifier.classify(cleanContent, true);
@@ -231,6 +245,15 @@ export class Reflector {
         }
       }
 
+      // Manual entries (/learn) bypass rejection — user explicitly asked to remember
+      if (entry.tool_name === 'manual' && classifyResult.rejected) {
+        classifyResult.rejected = false;
+        classifyResult.instructivity_score = Math.max(classifyResult.instructivity_score, 50);
+        aceDebug(`Reflector: manual entry — overriding rejection, boosted score to ${classifyResult.instructivity_score}`);
+      }
+
+      aceDebug(`Reflector: classified as ${classifyResult.knowledge_type}, score=${classifyResult.instructivity_score}, rejected=${classifyResult.rejected}`);
+
       if (classifyResult.rejected) {
         aceWarn(`Reflector: skipping entry (classifier rejected) - ${classifyResult.reason}`);
         skipped++;
@@ -239,6 +262,7 @@ export class Reflector {
 
       // Step 4: Extract metadata
       const keyEntities = extractEntities(cleanContent);
+      aceDebug(`Reflector: entities=[${keyEntities.slice(0, 5).join(', ')}]`);
       const relatedFiles = entry.context.file ? [entry.context.file] : [];
       const relatedTools = [entry.tool_name];
       const tags: string[] = [entry.pattern_type];

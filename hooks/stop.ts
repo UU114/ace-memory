@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { readQueue, markProcessed } from '../storage/session-queue.js';
 import { IPCClient } from '../shared/ipc-client.js';
-import { aceLog, aceWarn } from '../shared/logger.js';
+import { aceLog, aceWarn, aceDebug } from '../shared/logger.js';
 import type { StopInput } from '../types/hook.js';
 
 const BATCH_THRESHOLD = 3;
@@ -22,8 +22,11 @@ export async function stopMain(input: StopInput): Promise<void> {
   const entries = readQueue(session_id);
   const unprocessed = entries.filter(e => !e.processed);
 
+  aceDebug(`Stop: session=${session_id}, total_entries=${entries.length}, unprocessed=${unprocessed.length}, threshold=${BATCH_THRESHOLD}`);
+
   // Threshold check: skip if too few candidates
   if (unprocessed.length < BATCH_THRESHOLD) {
+    aceDebug(`Stop: below threshold (${unprocessed.length} < ${BATCH_THRESHOLD}), deferring to SessionEnd`);
     aceLog(`Stop: ${unprocessed.length} unprocessed entries, below threshold ${BATCH_THRESHOLD}`);
     process.stdout.write(JSON.stringify({}));
     return;
@@ -39,6 +42,7 @@ export async function stopMain(input: StopInput): Promise<void> {
 
   try {
     const projectName = path.basename(cwd || '');
+    aceDebug(`Stop: sending ${unprocessed.length} entries to curate for project=${projectName}`);
     await client.call('curate', {
       insights: unprocessed,
       project: projectName,
@@ -47,6 +51,7 @@ export async function stopMain(input: StopInput): Promise<void> {
     // Mark processed
     const timestamps = unprocessed.map(e => e.timestamp);
     markProcessed(session_id, timestamps);
+    aceDebug(`Stop: curate complete, marked ${timestamps.length} entries as processed`);
     aceLog(`Stop: curated ${unprocessed.length} entries`);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

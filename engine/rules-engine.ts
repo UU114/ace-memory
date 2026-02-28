@@ -1,4 +1,5 @@
 import type { PatternType } from '../types/hook.js';
+import { aceDebug } from '../shared/logger.js';
 
 export interface PatternCandidate {
   pattern_type: PatternType;
@@ -129,23 +130,32 @@ export class RulesEngine {
       ? truncate(toolResponse, MAX_RESPONSE_LEN)
       : '';
 
+    aceDebug(`RulesEngine.detect: tool=${toolName}, input_keys=${Object.keys(input).join(',')}, response_len=${response.length}`);
+
     // Priority order: error_fix > code_pattern > command_usage > file_creation
     if (toolName === 'Bash') {
-      return this.detectErrorFix(input, response)
+      const result = this.detectErrorFix(input, response)
         ?? this.detectCommandUsage(input, response)
         ?? null;
+      aceDebug(`RulesEngine.detect: Bash → ${result ? result.pattern_type : 'none'}`);
+      return result;
     }
 
     if (toolName === 'Write') {
-      return this.detectFileCreation(input, response)
+      const result = this.detectFileCreation(input, response)
         ?? this.detectCodePattern(toolName, input)
         ?? null;
+      aceDebug(`RulesEngine.detect: Write → ${result ? result.pattern_type : 'none'}`);
+      return result;
     }
 
     if (toolName === 'Edit') {
-      return this.detectCodePattern(toolName, input) ?? null;
+      const result = this.detectCodePattern(toolName, input) ?? null;
+      aceDebug(`RulesEngine.detect: Edit → ${result ? result.pattern_type : 'none'}`);
+      return result;
     }
 
+    aceDebug(`RulesEngine.detect: tool ${toolName} not monitored`);
     return null;
   }
 
