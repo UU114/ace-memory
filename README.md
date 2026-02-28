@@ -27,7 +27,7 @@ ace-memory/
   hooks/         # Claude Code hook handlers (SessionStart, UserPromptSubmit, PostToolUse, Stop, SessionEnd)
   scripts/       # CLI tools (ace-cli, install, setup, uninstall)
   shared/        # Shared utilities (IPC client, config loader, logger, platform paths)
-  skills/        # Skill definitions for /ace and /learn commands
+  skills/        # Skill definitions for /ace-memory:ace and /ace-memory:learn commands
   storage/       # SQLite storage layer (schema, CRUD, session queue)
   types/         # TypeScript type definitions (Bullet, Config, IPC protocol, Hook)
   tests/         # 480 tests across 29 test files
@@ -74,44 +74,44 @@ When a new Claude Code session starts, the plugin will:
 
 ### Slash Commands
 
-ACE provides two slash commands in Claude Code:
+ACE provides two slash commands in Claude Code (namespaced under the plugin name `ace-memory`):
 
-#### `/ace` — Playbook Manager
+#### `/ace-memory:ace` — Playbook Manager
 
 | Command | Description |
 |---------|-------------|
-| `/ace status` | Show Playbook statistics (bullet counts by scope, type, section) |
-| `/ace search <query>` | Search knowledge base with keyword matching |
-| `/ace config` | Display current configuration |
-| `/ace config set <key> <value>` | Update config (dot notation, e.g. `decay.half_life_days 60`) |
-| `/ace health` | Check daemon, IPC, and ONNX model status |
-| `/ace export` | Export entire Playbook as JSON |
-| `/ace clear` | Delete all bullets (requires confirmation) |
+| `/ace-memory:ace status` | Show Playbook statistics (bullet counts by scope, type, section) |
+| `/ace-memory:ace search <query>` | Search knowledge base with keyword matching |
+| `/ace-memory:ace config` | Display current configuration |
+| `/ace-memory:ace config set <key> <value>` | Update config (dot notation, e.g. `decay.half_life_days 60`) |
+| `/ace-memory:ace health` | Check daemon, IPC, and ONNX model status |
+| `/ace-memory:ace export` | Export entire Playbook as JSON |
+| `/ace-memory:ace clear` | Delete all bullets (requires confirmation) |
 
 Examples:
 ```
-/ace status
-/ace search vitest setup
-/ace config set search.max_results 10
-/ace health
+/ace-memory:ace status
+/ace-memory:ace search vitest setup
+/ace-memory:ace config set search.max_results 10
+/ace-memory:ace health
 ```
 
-#### `/learn` — Manual Knowledge Ingestion
+#### `/ace-memory:learn` — Manual Knowledge Ingestion
 
 Teach ACE something explicitly:
 
 ```
-/learn Always use bun instead of npm in this project
-/learn When you see ECONNRESET, retry with exponential backoff
-/learn Use vitest --watch for TDD workflow
-/learn --scope global Always use ESM instead of CommonJS
+/ace-memory:learn Always use bun instead of npm in this project
+/ace-memory:learn When you see ECONNRESET, retry with exponential backoff
+/ace-memory:learn Use vitest --watch for TDD workflow
+/ace-memory:learn --scope global Always use ESM instead of CommonJS
 ```
 
 Options:
 - `--scope global` — Universal knowledge, applies to all projects
 - `--scope project:<name>` — Project-specific knowledge
 
-Without arguments, `/learn` enters interactive mode and asks what you want ACE to remember.
+Without arguments, `/ace-memory:learn` enters interactive mode and asks what you want ACE to remember.
 
 ### Automatic Learning
 
@@ -146,10 +146,10 @@ Config file location: `~/.ace-claude/config.json`
 | `reflector` | `min_interaction_quality` | 0.3 | Minimum quality to accept a bullet |
 | `daemon` | `idle_timeout_minutes` | 5 | Daemon auto-shutdown after idle |
 
-Use `/ace config set <key> <value>` to modify, e.g.:
+Use `/ace-memory:ace config set <key> <value>` to modify, e.g.:
 ```
-/ace config set decay.half_life_days 60
-/ace config set search.max_results 10
+/ace-memory:ace config set decay.half_life_days 60
+/ace-memory:ace config set search.max_results 10
 ```
 
 ## Data Storage
